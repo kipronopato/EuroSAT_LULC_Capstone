@@ -1,201 +1,119 @@
-# Capstone: LULC Classification of Sentinel-2 Imagery Under Class Imbalance
+﻿# EuroSAT land-cover classification
 
-DSA 8401 Applied Machine Learning capstone. Patrick Kiprono (Adm. 22274).
+Patrick Kiprono (22274) · DSA 8401 Applied Machine Learning capstone
 
-Classifies 64x64 Sentinel-2 patches from EuroSAT (Helber et al., 2019) into ten land-use / land-cover
-classes, and asks **how well a CNN recognises minority classes when the training data is imbalanced, and
-whether transfer learning with imbalance-aware training closes that gap.**
+This project classifies Sentinel-2 satellite images into 10 land-use and land-cover classes, such as forest, river, and highway. It asks what happens when some classes have far fewer training examples and tests ways to improve their detection.
 
-The [five-minute presentation](deliverables/EuroSAT_Capstone_5_Minute_Presentation.pptx)
-and [analysis notebook](notebooks/capstone_report.ipynb) explain the modeling choices, results, and limitations.
-See [AI_USE.md](AI_USE.md) for the AI use disclosure.
+**Main result:** Class weighting helped the 13-band CNN correctly identify **74%** of highway images on the geographic test split, up from **35%**.
 
-## Quick start with Docker
+[Final presentation](deliverables/EuroSAT_Capstone_5_Minute_Presentation.pptx) · [Analysis notebook](notebooks/capstone_report.ipynb) · [AI use disclosure](AI_USE.md)
 
-With Docker and the Compose plugin running, run this command from the repository root:
+## Run the demo
+
+Start Docker, then run this command from the repository root:
 
 ```bash
 docker compose up --build -d --wait --wait-timeout 180
 ```
 
-Open the [web app](http://localhost:8000/), [API docs](http://localhost:8000/docs), or
-[Streamlit interface](http://localhost:8501/). The pretrained models and sample images are included.
+Open the [web app](http://localhost:8000/). Try a sample in the **Classify a patch** tab or load the demo scene in the **Land-cover map** tab. You can also open the [API docs](http://localhost:8000/docs) or the [Streamlit interface](http://localhost:8501/).
+
+The repository includes trained models and sample images. The demo runs without downloading EuroSAT or retraining.
 
 ```bash
 curl --fail http://localhost:8000/health
 curl --fail -F "file=@samples/Industrial.tif" http://localhost:8000/predict
-curl --fail -F "file=@samples/Forest.png" http://localhost:8000/predict
 docker compose down
 ```
 
-In Windows PowerShell, use `curl.exe`.
+Use `curl.exe` in Windows PowerShell. The last command stops both services.
 
-## Architecture
+## How it works
 
 ```mermaid
 flowchart LR
-  A["EuroSAT multispectral GeoTIFFs"] --> B["Ingest pixels and coordinates"]
-  B --> C["Geographic train, validation and test split"]
-  C --> D["Downsample training to 20:1"]
-  D --> E["Random forest and CNN experiments"]
-  E --> F["MLflow evaluation and research champion"]
-  C --> G["Train CNN and EfficientNet on the full training pool"]
-  G --> H["Packaged model weights and serving configuration"]
-  subgraph Compose["Docker Compose"]
-    H --> I["FastAPI patch prediction and land-cover mapping"]
-    J["Web app and Streamlit"] <--> I
-  end
+  A["EuroSAT satellite images"] --> B["Geographic train, validation and test split"]
+  B --> C["20:1 training set"]
+  C --> D["Model comparison and research champion"]
+  B --> E["Full training set"]
+  E --> F["Serving models"]
+  F --> G["FastAPI predictions and maps"]
+  G <--> H["Web app and Streamlit"]
 ```
 
-## Results (untouched, spatially separated test set; training set imbalanced 20:1)
+EuroSAT contains 27,000 labelled images at 64 × 64 pixels with 13 spectral bands. The pipeline assigns entire 0.1° geographic blocks to train, validation, or test to reduce leakage between nearby images. For the imbalance experiment, it downsamples the training set until the most common class has 20 times as many examples as the rarest. The validation and test splits retain 3,857 images each.
 
-| Model | Loss | Test macro F1 | Minority macro F1 | Highway recall |
-|---|---|---|---|---|
-| Random forest (band stats + NDVI) | class-weighted | 0.837 | 0.781 | 0.31 |
-| Custom CNN, RGB | cross-entropy | 0.763 | 0.680 | 0.14 |
-| Custom CNN, RGB | class-weighted | 0.821 | 0.818 | 0.69 |
-| Custom CNN, 13 bands | cross-entropy | 0.883 | 0.816 | 0.35 |
-| **Custom CNN, 13 bands (champion)** | **class-weighted** | **0.926** | 0.906 | 0.74 |
-| EfficientNet-B0, RGB | cross-entropy | 0.903 | 0.892 | 0.70 |
-| EfficientNet-B0, RGB | class-weighted | 0.923 | **0.917** | **0.81** |
-| EfficientNet-B0, RGB | focal | 0.910 | 0.899 | 0.73 |
-| *Reference: custom CNN, 13 bands, balanced full training set* | cross-entropy | *0.970* | *0.964* | *0.93* |
+The random forest uses band statistics and a vegetation index as a baseline. The custom CNN compares RGB and all 13 bands. EfficientNet-B0 tests ImageNet transfer learning on RGB. The pipeline chooses the best imbalanced CNN by validation macro F1 and reports its performance on the held-out test split.
 
-Imbalance hits the rarest classes hardest (as few as 14% of highways found). Class weighting helped every
-architecture; transfer learning was the largest single gain on RGB; the 13 spectral bands were worth as much as
-ImageNet pretraining. Together they close roughly half to two-thirds of the gap to balanced training, not all of it.
-Each configuration was trained once (seed 42), so differences of about 0.01 are within run-to-run noise.
+## Results
 
-## What the pipeline does
+Macro F1 gives each class equal weight. Minority macro F1 averages the F1 scores for Residential, River, Industrial, and Highway, the four rarest training classes. Highway recall is the share of highway images correctly identified.
 
-| Stage | Command | What it does |
-|---|---|---|
-| 1. Ingest | `python -m pipeline.ingest` | Downloads EuroSAT all-bands (2.07 GB) into `data/EuroSAT/` if missing, reads all 27,000 13-band GeoTIFFs and their centre lat/lon into `artifacts/` |
-| 2. Split | `python -m pipeline.split` | 0.1° geographic blocks -> `StratifiedGroupKFold` (train / val / test, blocks never shared), then subsamples **train only** to a 20:1 geometric imbalance. Validation and test are untouched. Also checks how close test patches sit to training patches |
-| 3. Samples | `python -m pipeline.make_samples` | One test patch per class into `samples/` (GeoTIFF + PNG) for the API, UI and tests |
-| 4. Baseline | `python -m pipeline.baseline` | Random forest on per-band statistics + NDVI (unweighted, class-weighted, and on a random split for comparison) |
-| 5. CNNs | `python -m pipeline.train --model {cnn,effnet} --bands {rgb,ms} --loss {ce,weighted_ce,focal}` | Custom 3-block CNN (RGB or 13 bands) and EfficientNet-B0 (ImageNet weights, frozen head training then partial fine-tuning). All with flip/rotation augmentation, early stopping on validation macro F1 |
-| 6. Champion | `python -m pipeline.select_champion` | Builds the leaderboard, selects the imbalanced CNN by **validation** macro F1 (minimum 0.80), registers it in MLflow (`@champion`), and exports to `artifacts/research_champion/` |
+| Model | Training loss | Test macro F1 | Minority macro F1 | Highway recall |
+| --- | --- | ---: | ---: | ---: |
+| Random forest | Class-weighted | 0.837 | 0.781 | 31% |
+| RGB CNN | Cross-entropy | 0.763 | 0.680 | 14% |
+| RGB CNN | Class-weighted | 0.821 | 0.818 | 69% |
+| 13-band CNN | Cross-entropy | 0.883 | 0.816 | 35% |
+| **13-band CNN (research champion)** | **Class-weighted** | **0.926** | 0.906 | 74% |
+| RGB EfficientNet-B0 | Cross-entropy | 0.903 | 0.892 | 70% |
+| RGB EfficientNet-B0 | Class-weighted | 0.923 | **0.917** | **81%** |
+| RGB EfficientNet-B0 | Focal | 0.910 | 0.899 | 73% |
+| 13-band CNN (full-training reference) | Cross-entropy | 0.970 | 0.964 | 93% |
 
-`python run_pipeline.py` runs everything (the full experiment grid is listed in that file);
-`python run_pipeline.py --from train` resumes from a stage.
+The weighted RGB EfficientNet had the best minority macro F1 among the imbalanced runs. Each configuration ran once, so small score differences need replication. All results use European EuroSAT imagery. Performance in other regions or with other image sources needs separate validation.
 
-Design choices that guard against leakage:
-* Normalisation is a Keras `Normalization` layer adapted on the training set only and saved **inside**
-  the model, so the API feeds raw pixels and cannot drift from training.
-* The champion is chosen on validation; the test set is only reported.
-* The RGB conversion (`pipeline/data.py: to_rgb8`) is the single function used by training and by the API.
+See the [full leaderboard](reports/leaderboard.csv) and [geographic split audit](reports/leakage_check.csv).
 
-## Experiment tracking
+## What the app serves
+
+| Endpoint | Purpose |
+| --- | --- |
+| `POST /predict` | Classify a 64 × 64 GeoTIFF or an RGB PNG/JPEG. Returns the predicted class and scores. |
+| `POST /map` | Map a larger image with overlapping patches. Returns a colour map, confidence, and estimated class areas. |
+| `GET /map/demo` | View the map for a mosaic assembled from held-out EuroSAT patches. |
+| `GET /model-info` | Inspect the active models, input format, and benchmark scores. |
+
+Patch uploads have a 10 MB limit. Map uploads have a 60 MB limit. The map estimates class boundaries from overlapping predictions over roughly 640 m windows, so the output has limited boundary precision.
+
+The app uses models trained on the full training pool. On the spatial test set, the 13-band upload pipeline scored **0.986 macro F1**, while the RGB pipeline scored **0.956**. The 13-band pipeline averages the multispectral CNN and RGB EfficientNet. See the [serving configuration](model/serving.json) and [research champion](research_model/).
+
+## Reproduce the experiments
+
+Use Python 3.12 in a virtual environment. The first run downloads about 2 GB of EuroSAT data. Allow several additional GB for processed images and model files, and several hours for training on CPU.
+
+```bash
+python -m pip install -r requirements.txt
+python run_pipeline.py
+```
+
+The pipeline ingests images, creates the splits, saves demo patches, trains the baseline and CNNs, writes the [leaderboard](reports/leaderboard.csv), and exports the research champion to `artifacts/research_champion/`. To resume at training, run `python run_pipeline.py --from train`.
+
+To retrain the full-training RGB component and rebuild the demo mosaic, run:
+
+```bash
+python -m pipeline.train --model effnet --bands rgb --loss ce --train-set full
+python -m pipeline.make_mosaic
+```
+
+New training checkpoints go to `artifacts/models/`. The app and tests load the submitted weights from `model/`. After training, open the [analysis notebook](notebooks/capstone_report.ipynb) to rerun the analysis, or launch MLflow to browse the logged runs:
 
 ```bash
 mlflow ui --backend-store-uri sqlite:///mlflow.db --port 5000
 ```
 
-Every run logs its parameters, per-epoch curves, validation and test macro F1, minority-class macro F1,
-per-class precision/recall/F1, a row-normalised confusion matrix and its test probabilities.
+## Tests and project files
 
-## Serving
+Run `python -m pytest -q` after installing the project dependencies. [GitHub Actions](https://github.com/kipronopato/EuroSAT_LULC_Capstone/actions) also builds the Docker images and smoke-tests the API and Streamlit.
 
-```bash
-uvicorn api.main:app --reload            # web platform: http://127.0.0.1:8000/   API docs: /docs
-streamlit run ui/app.py                   # http://localhost:8501
-pytest -q                                 # API tests (uses the exported champion and samples/)
-docker compose up --build                 # API on :8000 and UI on :8501, in containers
-```
+| Location | Contents |
+| --- | --- |
+| [`pipeline/`](pipeline/) | Data preparation, training, and evaluation |
+| [`api/`](api/), [`web/`](web/), [`ui/`](ui/) | FastAPI service, web app, and Streamlit |
+| [`model/`](model/), [`research_model/`](research_model/) | Serving weights and the submitted research champion |
+| [`samples/`](samples/), [`reports/`](reports/) | Demo imagery and evaluation outputs |
+| [`notebooks/`](notebooks/), [`deliverables/`](deliverables/) | Analysis notebook and final presentation |
 
-`POST /predict` takes a file upload: a 13-band EuroSAT GeoTIFF (canonical) or an 8-bit RGB PNG/JPEG,
-and returns the predicted class, its confidence and the top three classes:
+## Data credits
 
-```bash
-curl -F "file=@samples/Industrial.tif" http://127.0.0.1:8000/predict
-```
-
-```json
-{"predicted_class": "Industrial", "confidence": 0.9997,
- "top3": [{"class": "Industrial", "probability": 0.9997}, {"class": "Highway", "probability": 0.0002},
-          {"class": "Residential", "probability": 0.0}],
- "model_version": 1}
-```
-
-**Deployed models differ from the research champion.** The 20:1 imbalanced training set was the experimental
-condition being studied, not a constraint on deployment, so the platform serves models trained on the full
-(roughly balanced) training pool, combined as below. The configuration was chosen on **validation** macro F1
-among single models, 8-way test-time augmentation (TTA: average over all flips/rotations) and 13-band + RGB
-ensembles. The resulting test scores are in `model/serving.json`. The submitted research champion is available
-in [`research_model/`](research_model/).
-
-| Upload | Prediction | Val macro F1 | Test macro F1 | Test Highway F1 |
-|---|---|---|---|---|
-| 13-band GeoTIFF (64x64) | average of `cnn_ms_ce_fulltrain` (`model/`) and `effnet_rgb_ce_fulltrain` (`model/rgb/`) on the true-colour bands, both with TTA | 0.983 | **0.986** | 0.98 |
-| RGB PNG/JPEG (any size; centre-cropped, resized to 64x64) or 3-band GeoTIFF | `effnet_rgb_ce_fulltrain` with TTA | 0.957 | **0.956** | 0.93 |
-| *Before (research champion / imbalanced EfficientNet, no TTA)* | | *0.932 / 0.921* | *0.926 / 0.923* | *0.80 / 0.86* |
-
-`effnet_rgb_ce_fulltrain` is a new run: `python -m pipeline.train --model effnet --bands rgb --loss ce --train-set full`
-(51 min on CPU; val macro F1 0.944 without TTA).
-
-The response also carries `probabilities` (all ten classes), `model` (which one answered) and `preview`
-(a PNG data URL, since browsers cannot display GeoTIFFs). The web page in `web/` (plain HTML/JS, no build step)
-is served by FastAPI at `/`, with upload by drag-and-drop and one sample per class. Uploads are limited to 10 MB.
-**Land-cover map (`POST /map`, the page's first tab).** For an image larger than one patch, `api/mapping.py`
-slides the 64 px (640 m) window across it with overlap (stride 32 / 16 / 8 px for fast / normal / fine),
-gives each pixel the centre-weighted average of the probabilities of every window covering it, and colours it by
-the winning class. The response has the colour map, a confidence map, each class's share and area (ha), and a
-small class grid for hover look-ups. Ground resolution is read from a projected GeoTIFF, entered by the user,
-or assumed to be 10 m; the image is rescaled so a window always covers 640 m. This is patch-level mapping, not
-per-pixel segmentation (EuroSAT has no pixel masks): boundaries are only as sharp as the stride.
-`python -m pipeline.make_mosaic` builds the demo scene in `samples/` (48 held-out test patches in a 6x8 grid,
-with its ground truth). With the deployed ensemble at normal detail the map gets 90% of pixels right (RGB: 86%),
-and **99% (RGB: 98%) inside the tiles**: nearly all errors are within 16 px of the artificial seams between
-unrelated tiles, which look like linear features (River/Highway). Maps do not use TTA: the overlapping windows
-already average many views, and TTA cost 8x the time for no gain on the demo.
-
-Photos that are not Sentinel-2 imagery (drone shots, Google Maps screenshots at other resolutions) are outside the
-training distribution, so treat their predictions with caution.
-
-`GET /model-info` returns which model is deployed, its input spec and its scores.
-
-CI (`.github/workflows/ci.yml`) tests the packaged serving models through the API, builds both
-Docker images and smoke-tests them. Training is not run in CI (it needs the 2 GB archive and hours of CPU).
-
-## Reproduce the experiments
-
-Use Python 3.12 in a virtual environment. Run from the repository root:
-
-```bash
-python -m pip install -r requirements.txt
-python run_pipeline.py
-python -m pipeline.train --model effnet --bands rgb --loss ce --train-set full
-python -m pipeline.make_mosaic
-python -m pytest -q
-```
-
-The first run downloads the EuroSAT multispectral archive (about 2 GB). Allow several additional GB
-for packed image arrays, model checkpoints, and tracking data. The main pipeline reproduces the research
-grid, including the full-training 13-band reference. The extra training command reproduces the
-full-training RGB component. Weights go to `artifacts/models/`, and the pipeline exports the selected
-research model to `artifacts/research_champion/`. API tests use the submitted weights and inference
-configuration in `model/`. Open the notebook after training to rerun its analysis cells.
-
-Developed on a CPU-only laptop (Ryzen 5 5500U, 8 GB RAM). The full grid takes several hours on that machine;
-to keep it feasible, EfficientNet trains its head on frozen features computed once, then fine-tunes the top
-40 layers with augmentation at 64x64.
-
-## Layout
-
-```
-data/       EuroSAT download (git-ignored)
-pipeline/   config, ingest, split, data, models, train, baseline, evaluate, select_champion, make_samples
-api/        FastAPI service          ui/        Streamlit front end
-tests/      API tests                samples/   one test patch per class
-model/      serving models           reports/   figures and tables (split map, leaderboard, ...)
-research_model/ submitted champion   deliverables/ final PowerPoint presentation
-notebooks/  capstone_report.ipynb    artifacts/ packed data and trained runs (git-ignored)
-logs/       pipeline logs            .github/   CI workflow
-```
-
-## Data and credits
-
-The pipeline downloads [EuroSAT](https://github.com/phelber/EuroSAT), by Helber, Bischke, Dengel and
-Borth. The repository includes a small set of images for the demos and tests. See the
-[imagery attribution and dataset license](samples/NOTICE.md).
+The project uses [EuroSAT](https://github.com/phelber/EuroSAT) by Patrick Helber, Benjamin Bischke, Andreas Dengel, and Damian Borth. See the [imagery attribution and dataset license](samples/NOTICE.md).
