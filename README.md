@@ -10,9 +10,11 @@ This project classifies Sentinel-2 satellite images into 10 land-use and land-co
 
 ## Run the demo
 
-Start Docker, then run this command from the repository root:
+Start Docker, then clone and run the project:
 
 ```bash
+git clone https://github.com/kipronopato/EuroSAT_LULC_Capstone.git
+cd EuroSAT_LULC_Capstone
 docker compose up --build -d --wait --wait-timeout 180
 ```
 
@@ -28,7 +30,36 @@ docker compose down
 
 Use `curl.exe` in Windows PowerShell. The last command stops both services.
 
-## How it works
+## Key features
+
+- **Patch classification.** Upload a 13-band GeoTIFF or an RGB image to see the predicted land-cover class and its top three scores.
+- **Land-cover mapping.** Upload a larger scene to see a colour map, prediction confidence, and estimated area by class.
+- **Reproducible experiments.** Compare models trained with and without class weighting on the same geographic test split.
+
+## Technology stack
+
+| Area | Tools |
+| --- | --- |
+| Web interfaces | HTML, CSS, JavaScript, Streamlit |
+| API | FastAPI, Uvicorn |
+| Data and models | Rasterio, NumPy, pandas, scikit-learn, Keras, TensorFlow |
+| Experiment tracking | MLflow |
+| Build and verification | Docker Compose, pytest, GitHub Actions |
+
+## Dataset
+
+| Property | Value |
+| --- | ---: |
+| Source | [EuroSAT Sentinel-2 imagery](https://github.com/phelber/EuroSAT) |
+| Labelled patches | 27,000 |
+| Patch size | 64 × 64 pixels |
+| Spectral bands | 13 |
+| Land-cover classes | 10 |
+| Full training pool | 19,286 patches |
+| Training pool after downsampling | 7,297 patches |
+| Validation and test | 3,857 patches each |
+
+## Machine-learning pipeline
 
 ```mermaid
 flowchart LR
@@ -41,9 +72,18 @@ flowchart LR
   G <--> H["Web app and Streamlit"]
 ```
 
-EuroSAT contains 27,000 labelled images at 64 × 64 pixels with 13 spectral bands. The pipeline assigns entire 0.1° geographic blocks to train, validation, or test to reduce leakage between nearby images. For the imbalance experiment, it downsamples the training set until the most common class has 20 times as many examples as the rarest. The validation and test splits retain 3,857 images each.
+1. Read the GeoTIFF pixels and patch coordinates.
+2. Assign entire 0.1° geographic blocks to train, validation, or test to reduce leakage between nearby images.
+3. Downsample the training pool to a 20:1 ratio between the most common and rarest classes.
+4. Select the research champion by validation macro F1 and report its performance on the held-out test split.
 
-The random forest uses band statistics and a vegetation index as a baseline. The custom CNN compares RGB and all 13 bands. EfficientNet-B0 tests ImageNet transfer learning on RGB. The pipeline chooses the best imbalanced CNN by validation macro F1 and reports its performance on the held-out test split.
+## Models
+
+| Model | Why it was used |
+| --- | --- |
+| Random forest | Baseline using band statistics and a vegetation index. |
+| Custom CNN | Tests how much the 13 spectral bands help compared with RGB inputs. |
+| EfficientNet-B0 | Tests an ImageNet-pretrained model on RGB inputs. |
 
 ## Results
 
@@ -61,11 +101,23 @@ Macro F1 gives each class equal weight. Minority macro F1 averages the F1 scores
 | RGB EfficientNet-B0 | Focal | 0.910 | 0.899 | 73% |
 | 13-band CNN (full-training reference) | Cross-entropy | 0.970 | 0.964 | 93% |
 
-The weighted RGB EfficientNet had the best minority macro F1 among the imbalanced runs. Each configuration ran once, so small score differences need replication. All results use European EuroSAT imagery. Performance in other regions or with other image sources needs separate validation.
+The weighted RGB EfficientNet had the best minority macro F1 among the imbalanced runs. The full-training reference scored highest overall.
 
 See the [full leaderboard](reports/leaderboard.csv) and [geographic split audit](reports/leakage_check.csv).
 
-## What the app serves
+## Published models
+
+The app uses models trained on the full training pool. The research champion comes from the 20:1 experiment.
+
+| Artifact | Role |
+| --- | --- |
+| [13-band CNN](model/model.keras) | Combines with RGB EfficientNet for multispectral uploads. The ensemble scored **0.986 test macro F1**. |
+| [RGB EfficientNet](model/rgb/model.keras) | Handles RGB uploads and scored **0.956 test macro F1** in the RGB pipeline. |
+| [Research champion](research_model/) | Class-weighted 13-band CNN trained on the imbalanced pool. It scored **0.926 test macro F1**. |
+
+The [serving configuration](model/serving.json) records the model combinations and scores.
+
+## API
 
 | Endpoint | Purpose |
 | --- | --- |
@@ -74,9 +126,7 @@ See the [full leaderboard](reports/leaderboard.csv) and [geographic split audit]
 | `GET /map/demo` | View the map for a mosaic assembled from held-out EuroSAT patches. |
 | `GET /model-info` | Inspect the active models, input format, and benchmark scores. |
 
-Patch uploads have a 10 MB limit. Map uploads have a 60 MB limit. The map estimates class boundaries from overlapping predictions over roughly 640 m windows, so the output has limited boundary precision.
-
-The app uses models trained on the full training pool. On the spatial test set, the 13-band upload pipeline scored **0.986 macro F1**, while the RGB pipeline scored **0.956**. The 13-band pipeline averages the multispectral CNN and RGB EfficientNet. See the [serving configuration](model/serving.json) and [research champion](research_model/).
+Patch uploads have a 10 MB limit. Map uploads have a 60 MB limit.
 
 ## Reproduce the experiments
 
@@ -102,6 +152,12 @@ New training checkpoints go to `artifacts/models/`. The app and tests load the s
 mlflow ui --backend-store-uri sqlite:///mlflow.db --port 5000
 ```
 
+## Limitations
+
+- Each training configuration ran once. Small differences between scores need replication.
+- EuroSAT covers European Sentinel-2 scenes. Accuracy in other regions or with other imagery needs separate validation.
+- Land-cover maps use overlapping windows of roughly 640 m. Boundaries are approximate.
+
 ## Tests and project files
 
 Run `python -m pytest -q` after installing the project dependencies. [GitHub Actions](https://github.com/kipronopato/EuroSAT_LULC_Capstone/actions) also builds the Docker images and smoke-tests the API and Streamlit.
@@ -116,4 +172,4 @@ Run `python -m pytest -q` after installing the project dependencies. [GitHub Act
 
 ## Data credits
 
-The project uses [EuroSAT](https://github.com/phelber/EuroSAT) by Patrick Helber, Benjamin Bischke, Andreas Dengel, and Damian Borth. See the [imagery attribution and dataset license](samples/NOTICE.md).
+EuroSAT was created by Patrick Helber, Benjamin Bischke, Andreas Dengel, and Damian Borth. See the [imagery attribution and dataset license](samples/NOTICE.md).
