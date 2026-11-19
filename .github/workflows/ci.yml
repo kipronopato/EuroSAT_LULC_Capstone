@@ -34,9 +34,14 @@ jobs:
           docker compose up -d --wait --wait-timeout 180
           curl --fail http://localhost:8000/health
           curl --fail http://localhost:8000/model-info
-          curl --fail -F "file=@samples/River.tif" http://localhost:8000/predict
-          curl --fail -F "file=@samples/Industrial.png" http://localhost:8000/predict
+          curl --fail-with-body -F "file=@samples/River.tif" http://localhost:8000/predict
+          curl --fail-with-body -F "file=@samples/Industrial.png" http://localhost:8000/predict
+          curl --fail --max-time 120 -o /dev/null http://localhost:8000/map/demo
           curl --fail --retry 15 --retry-connrefused --retry-delay 2 -o /dev/null http://localhost:8501
+
+      - name: Show container logs on failure
+        if: failure()
+        run: docker compose logs --no-color
 
       - name: Stop containers
         if: always()

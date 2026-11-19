@@ -2,9 +2,14 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
-# Install the API's packages first (Docker caches this layer)
+# Rasterio's Linux wheel needs the system Expat library on the slim image.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends libexpat1 \
+    && rm -rf /var/lib/apt/lists/*
+
 COPY requirements-api.txt .
-RUN pip install --no-cache-dir -r requirements-api.txt
+RUN pip install --no-cache-dir -r requirements-api.txt \
+    && python -c "import rasterio"
 
 # Package the API, web page, shared preprocessing, and pretrained serving models and samples.
 COPY pipeline/__init__.py pipeline/config.py pipeline/data.py pipeline/
