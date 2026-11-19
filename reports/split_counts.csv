@@ -1,0 +1,12 @@
+class_name,train_full,train,val,test
+AnnualCrop,2143,2143,428,429
+Forest,2142,1536,429,429
+HerbaceousVegetation,2143,1101,428,429
+Pasture,1429,789,286,285
+PermanentCrop,1786,566,357,357
+SeaLake,2143,406,428,429
+Residential,2143,291,429,428
+River,1786,209,357,357
+Industrial,1785,149,358,357
+Highway,1786,107,357,357
+TOTAL,19286,7297,3857,3857

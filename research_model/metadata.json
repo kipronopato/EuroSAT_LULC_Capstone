@@ -1,0 +1,51 @@
+{
+  "model_name": "eurosat_lulc_classifier",
+  "version": 1,
+  "run": "cnn_ms_weighted_ce",
+  "run_id": "c7678abc4c9b4446b89fa050c5617fff",
+  "architecture": "cnn",
+  "loss": "weighted_ce",
+  "input": {
+    "bands": "ms",
+    "shape": [
+      64,
+      64,
+      13
+    ],
+    "description": "raw Sentinel-2 L1C reflectance, 13 bands",
+    "band_order": [
+      "B01",
+      "B02",
+      "B03",
+      "B04",
+      "B05",
+      "B06",
+      "B07",
+      "B08",
+      "B08A",
+      "B09",
+      "B10",
+      "B11",
+      "B12"
+    ]
+  },
+  "classes": [
+    "AnnualCrop",
+    "Forest",
+    "HerbaceousVegetation",
+    "Pasture",
+    "PermanentCrop",
+    "SeaLake",
+    "Residential",
+    "River",
+    "Industrial",
+    "Highway"
+  ],
+  "metrics": {
+    "val_macro_f1": 0.932,
+    "test_macro_f1": 0.9261,
+    "test_minority_macro_f1": 0.9059,
+    "test_accuracy": 0.929,
+    "test_top3_accuracy": 0.9917
+  }
+}

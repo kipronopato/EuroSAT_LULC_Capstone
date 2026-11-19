@@ -1,0 +1,33 @@
+{
+  "_comment": "How each upload type is predicted. Chosen on VALIDATION macro F1 among single models, 8-way TTA and 13-band + RGB ensembles; test reported once. Scores on the spatial test split (n=3857).",
+  "ms": {
+    "members": [
+      {
+        "model": "ms",
+        "tta": true
+      },
+      {
+        "model": "rgb",
+        "tta": true
+      }
+    ],
+    "metrics": {
+      "val_macro_f1": 0.9832,
+      "test_macro_f1": 0.9862,
+      "test_accuracy": 0.9868
+    }
+  },
+  "rgb": {
+    "members": [
+      {
+        "model": "rgb",
+        "tta": true
+      }
+    ],
+    "metrics": {
+      "val_macro_f1": 0.9568,
+      "test_macro_f1": 0.9564,
+      "test_accuracy": 0.9583
+    }
+  }
+}

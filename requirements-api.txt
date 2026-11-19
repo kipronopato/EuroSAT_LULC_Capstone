@@ -1,0 +1,11 @@
+# Only what the API needs. Used by the Docker image.
+# Keras is pinned so the model saved during training loads identically in the container.
+tensorflow-cpu==2.21.0
+keras==3.15.1
+numpy
+pandas
+pillow
+rasterio
+fastapi
+uvicorn
+python-multipart

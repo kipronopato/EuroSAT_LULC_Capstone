@@ -1,0 +1,12 @@
+# Everything: training pipeline (MLflow) + API + UI + tests.
+-r requirements-api.txt
+scikit-learn
+matplotlib
+mlflow
+streamlit
+requests
+pytest
+httpx
+nbformat
+nbconvert
+ipykernel

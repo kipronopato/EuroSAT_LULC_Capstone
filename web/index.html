@@ -1,0 +1,382 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EuroSAT Land Cover</title>
+<meta name="description" content="Upload a Sentinel-2 or RGB satellite image and map its land use / land cover.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2310b981' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'><polygon points='12 2 2 7 12 12 22 7 12 2'/><polyline points='2 17 12 22 22 17'/><polyline points='2 12 12 17 22 12'/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/style.css">
+<script>
+  // Apply the saved theme before first paint (no flash)
+  try { const t = localStorage.getItem("theme"); if (t) document.documentElement.dataset.theme = t; } catch (e) {}
+</script>
+</head>
+<body>
+
+<!-- Icon set (stroke icons, 24x24) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-logo" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></symbol>
+    <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></symbol>
+    <symbol id="i-map" viewBox="0 0 24 24"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/></symbol>
+    <symbol id="i-scan" viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><rect x="8" y="8" width="8" height="8" rx="1"/></symbol>
+    <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="16" x2="12" y2="11"/><line x1="12" y1="8" x2="12.01" y2="8"/></symbol>
+    <symbol id="i-upload" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></symbol>
+    <symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></symbol>
+    <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+    <symbol id="i-moon" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z"/></symbol>
+    <symbol id="i-menu" viewBox="0 0 24 24"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></symbol>
+    <symbol id="i-expand" viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M16 21h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></symbol>
+    <symbol id="i-layers" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></symbol>
+    <symbol id="i-split" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="12" y1="3" x2="12" y2="21"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></symbol>
+    <symbol id="i-image" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><polygon points="6 4 20 12 6 20 6 4"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></symbol>
+    <symbol id="i-sat" viewBox="0 0 24 24"><path d="M13 7 9 3 5 7l4 4M17 11l4 4-4 4-4-4M8 12l4 4M16 8l-3.5 3.5"/><path d="M9 21a6 6 0 0 0-6-6"/></symbol>
+  </defs>
+</svg>
+
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="nav" id="nav">
+  <div class="container nav-inner">
+    <a class="brand" href="#/" aria-label="EuroSAT Land Cover home">
+      <span class="brand-mark"><svg class="ic"><use href="#i-logo"/></svg></span>
+      <span class="brand-text">EuroSAT <b>Land Cover</b></span>
+    </a>
+    <nav class="nav-links" id="nav-links" aria-label="Main">
+      <a href="#/" data-route="home"><svg class="ic"><use href="#i-home"/></svg>Home</a>
+      <a href="#/map" data-route="map"><svg class="ic"><use href="#i-map"/></svg>Map</a>
+      <a href="#/classify" data-route="classify"><svg class="ic"><use href="#i-scan"/></svg>Classify</a>
+      <a href="#/classes" data-route="classes"><svg class="ic"><use href="#i-grid"/></svg>Classes</a>
+      <a href="#/about" data-route="about"><svg class="ic"><use href="#i-info"/></svg>About</a>
+    </nav>
+    <div class="nav-actions">
+      <span class="status" id="status" title="Server status"><span class="dot"></span><span id="status-text">Connecting…</span></span>
+      <button class="icon-btn" id="theme" type="button" aria-label="Toggle dark mode">
+        <svg class="ic only-light"><use href="#i-moon"/></svg><svg class="ic only-dark"><use href="#i-sun"/></svg>
+      </button>
+      <button class="icon-btn menu-btn" id="menu" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="nav-links">
+        <svg class="ic"><use href="#i-menu"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main id="main" tabindex="-1">
+
+  <!-- ============================================================ HOME -->
+  <section class="page" data-page="home" aria-label="Home">
+    <div class="hero">
+      <div class="container hero-inner">
+        <div class="hero-copy">
+          <span class="eyebrow"><svg class="ic"><use href="#i-sat"/></svg>Sentinel-2 · 10 land-cover classes</span>
+          <h1>See what covers the land, <span class="grad">from space</span>.</h1>
+          <p class="lead">Upload a satellite image and get a colour-coded land-cover map in seconds: crops, forest,
+            water, towns, roads and more, with the area of each.</p>
+          <div class="cta">
+            <a class="btn btn-primary btn-lg" href="#/map"><svg class="ic"><use href="#i-map"/></svg>Map an image</a>
+            <a class="btn btn-ghost btn-lg" href="#/classify"><svg class="ic"><use href="#i-scan"/></svg>Classify a patch</a>
+          </div>
+          <ul class="hero-stats" id="hero-stats">
+            <li><b data-stat="f1ms">98.6%</b><span>test macro F1</span></li>
+            <li><b>10</b><span>land-cover classes</span></li>
+            <li><b>13</b><span>spectral bands</span></li>
+          </ul>
+        </div>
+        <figure class="hero-visual">
+          <div class="compare" id="hero-compare" data-pos="50">
+            <div class="stage" id="hero-stage">
+              <img class="base" src="/samples/mosaic_demo.png" alt="Demo satellite scene">
+              <img class="over" id="hero-map" alt="Land-cover map of the demo scene" hidden>
+              <div class="handle" role="slider" tabindex="0" aria-label="Compare image and map" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50"><span></span></div>
+              <span class="tag tag-l">Map</span><span class="tag tag-r">Satellite</span>
+              <div class="stage-loading" id="hero-loading"><span class="spinner"></span>Generating demo map…</div>
+            </div>
+          </div>
+          <figcaption>Demo scene, 3.8 × 5.1 km. Drag the handle to compare.</figcaption>
+        </figure>
+      </div>
+    </div>
+
+    <div class="container section">
+      <div class="section-head">
+        <h2>How it works</h2>
+        <p>Three steps, no account, nothing to install.</p>
+      </div>
+      <ol class="steps">
+        <li class="card step">
+          <span class="step-n">1</span>
+          <h3>Upload</h3>
+          <p>A Sentinel-2 GeoTIFF (all 13 bands, most accurate) or any RGB satellite image (PNG/JPEG).</p>
+        </li>
+        <li class="card step">
+          <span class="step-n">2</span>
+          <h3>Analyse</h3>
+          <p>A 640 m window slides across the image; deep-learning models classify every position.</p>
+        </li>
+        <li class="card step">
+          <span class="step-n">3</span>
+          <h3>Explore</h3>
+          <p>Compare map and image, isolate a class, see where the model is unsure, and download the map.</p>
+        </li>
+      </ol>
+
+      <div class="features">
+        <a class="card feature" href="#/map">
+          <span class="feature-ic"><svg class="ic"><use href="#i-map"/></svg></span>
+          <div><h3>Land-cover map</h3><p>Turn a whole scene into a colour-coded map with area per class.</p></div>
+          <svg class="ic go"><use href="#i-arrow"/></svg>
+        </a>
+        <a class="card feature" href="#/classify">
+          <span class="feature-ic"><svg class="ic"><use href="#i-scan"/></svg></span>
+          <div><h3>Patch classifier</h3><p>One 64 × 64 patch in, its class and confidence out.</p></div>
+          <svg class="ic go"><use href="#i-arrow"/></svg>
+        </a>
+        <a class="card feature" href="#/classes">
+          <span class="feature-ic"><svg class="ic"><use href="#i-grid"/></svg></span>
+          <div><h3>Class guide</h3><p>What each of the ten classes looks like from orbit.</p></div>
+          <svg class="ic go"><use href="#i-arrow"/></svg>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================ MAP -->
+  <section class="page" data-page="map" aria-labelledby="map-h" hidden>
+    <div class="container page-head">
+      <div>
+        <h1 id="map-h">Land-cover map</h1>
+        <p>Classify every part of a larger image and explore the result.</p>
+      </div>
+    </div>
+
+    <div class="container workspace">
+      <aside class="side">
+        <div class="card pad">
+          <h2 class="card-title"><svg class="ic"><use href="#i-image"/></svg>Image</h2>
+          <label class="drop" id="map-drop" tabindex="0">
+            <input id="map-file" type="file" accept=".tif,.tiff,.png,.jpg,.jpeg" hidden>
+            <span class="drop-ic"><svg class="ic"><use href="#i-upload"/></svg></span>
+            <span class="drop-main">Drop an image or <u>browse</u></span>
+            <span class="drop-sub">GeoTIFF (13 bands) · PNG · JPEG · up to 60 MB</span>
+          </label>
+          <div class="file-chip" id="map-file-chip" hidden></div>
+          <div class="or"><span>or</span></div>
+          <button class="btn btn-soft btn-block" id="map-demo" type="button"><svg class="ic"><use href="#i-play"/></svg>Try the demo scene</button>
+        </div>
+
+        <div class="card pad">
+          <h2 class="card-title"><svg class="ic"><use href="#i-layers"/></svg>Settings</h2>
+          <label class="field">
+            <span>Ground resolution <em>(metres per pixel)</em></span>
+            <input id="map-res" type="number" min="0.5" max="100" step="0.5" placeholder="Auto · 10 m">
+          </label>
+          <p class="help">GeoTIFFs supply this themselves. For screenshots, enter the scale (e.g. 5 if 1 px = 5 m).</p>
+          <div class="field">
+            <span>Detail</span>
+            <div class="segmented" id="map-detail" role="radiogroup" aria-label="Detail">
+              <button type="button" role="radio" data-value="fast" aria-checked="false">Fast</button>
+              <button type="button" role="radio" data-value="normal" aria-checked="true">Normal</button>
+              <button type="button" role="radio" data-value="fine" aria-checked="false">Fine</button>
+            </div>
+          </div>
+          <button class="btn btn-primary btn-block" id="map-rerun" type="button" disabled>Re-analyse with these settings</button>
+        </div>
+      </aside>
+
+      <div class="main-col">
+        <div class="card viewer-card">
+          <div class="toolbar">
+            <div class="segmented small" id="view-mode" role="radiogroup" aria-label="View">
+              <button type="button" role="radio" data-value="overlay" aria-checked="true"><svg class="ic"><use href="#i-layers"/></svg>Overlay</button>
+              <button type="button" role="radio" data-value="swipe" aria-checked="false"><svg class="ic"><use href="#i-split"/></svg>Swipe</button>
+            </div>
+            <label class="range" id="opacity-wrap">
+              <span>Opacity</span>
+              <input id="map-opacity" type="range" min="0" max="100" value="70">
+            </label>
+            <label class="switch">
+              <input id="map-conf" type="checkbox"><span class="track"></span><span>Uncertainty</span>
+            </label>
+            <div class="toolbar-end">
+              <button class="icon-btn" id="map-full" type="button" aria-label="Full screen" title="Full screen" disabled><svg class="ic"><use href="#i-expand"/></svg></button>
+              <a class="btn btn-soft btn-sm disabled" id="map-download" download="landcover_map.png" aria-disabled="true"><svg class="ic"><use href="#i-download"/></svg>Download</a>
+            </div>
+          </div>
+
+          <div class="viewer" id="viewer">
+            <div class="viewer-empty" id="map-empty">
+              <span class="empty-ic"><svg class="ic"><use href="#i-map"/></svg></span>
+              <h3>No image yet</h3>
+              <p>Upload a satellite image or try the demo scene to see its land-cover map here.</p>
+            </div>
+            <div class="compare" id="map-compare" data-pos="50" hidden>
+              <div class="stage" id="map-stage">
+                <img class="base" id="map-image" alt="Uploaded image">
+                <img class="over" id="map-overlay" alt="Land-cover map">
+                <div class="handle" role="slider" tabindex="0" aria-label="Compare image and map" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50"><span></span></div>
+                <div class="tip" id="map-tip" hidden></div>
+              </div>
+            </div>
+            <div class="viewer-busy" id="map-busy" hidden>
+              <span class="spinner lg"></span>
+              <strong>Analysing image…</strong>
+              <span id="map-timer">0 s</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="results" id="map-results" hidden>
+          <div class="kpis" id="map-kpis"></div>
+          <div class="card pad">
+            <div class="card-title-row">
+              <h2 class="card-title">Land cover in this image</h2>
+              <button class="link-btn" id="legend-reset" type="button" hidden>Show all classes</button>
+            </div>
+            <p class="help">Click a class to isolate it on the map.</p>
+            <ul class="legend" id="map-legend"></ul>
+          </div>
+          <p class="meta" id="map-meta"></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================ CLASSIFY -->
+  <section class="page" data-page="classify" aria-labelledby="cls-h" hidden>
+    <div class="container page-head">
+      <div>
+        <h1 id="cls-h">Classify a patch</h1>
+        <p>One 64 × 64 patch (640 m × 640 m) in, its land-cover class out.</p>
+      </div>
+    </div>
+    <div class="container two-col">
+      <div class="card pad">
+        <h2 class="card-title"><svg class="ic"><use href="#i-upload"/></svg>Upload</h2>
+        <label class="drop" id="drop" tabindex="0">
+          <input id="file" type="file" accept=".tif,.tiff,.png,.jpg,.jpeg" hidden>
+          <span class="drop-ic"><svg class="ic"><use href="#i-upload"/></svg></span>
+          <span class="drop-main">Drop a patch or <u>browse</u></span>
+          <span class="drop-sub">13-band GeoTIFF (64 × 64) for best accuracy, or PNG/JPEG (cropped and resized)</span>
+        </label>
+        <h3 class="sub-title">Or pick a sample</h3>
+        <div class="samples" id="samples"></div>
+      </div>
+
+      <div class="card pad result-card" aria-live="polite">
+        <div class="placeholder" id="cls-empty">
+          <span class="empty-ic"><svg class="ic"><use href="#i-scan"/></svg></span>
+          <h3>Your result appears here</h3>
+          <p>Upload a patch or pick one of the samples.</p>
+        </div>
+        <div class="placeholder" id="cls-busy" hidden><span class="spinner lg"></span><h3>Classifying…</h3></div>
+        <div id="cls-result" hidden>
+          <div class="verdict">
+            <img id="preview" alt="True-colour preview of the patch" width="140" height="140">
+            <div class="verdict-text">
+              <span class="overline">Predicted class</span>
+              <h2 id="pred"></h2>
+              <p id="pred-desc" class="muted"></p>
+              <div class="ring-row">
+                <div class="ring" id="ring"><span id="ring-val"></span></div>
+                <div>
+                  <strong>Confidence</strong>
+                  <p class="muted small" id="note"></p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <h3 class="sub-title">All classes</h3>
+          <ol class="bars" id="bars"></ol>
+          <p class="meta" id="used"></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================ CLASSES -->
+  <section class="page" data-page="classes" aria-labelledby="classes-h" hidden>
+    <div class="container page-head">
+      <div>
+        <h1 id="classes-h">The ten classes</h1>
+        <p>What each land-cover class looks like in a 640 m Sentinel-2 patch. Click one to classify it.</p>
+      </div>
+    </div>
+    <div class="container class-grid" id="class-grid"></div>
+  </section>
+
+  <!-- ============================================================ ABOUT -->
+  <section class="page" data-page="about" aria-labelledby="about-h" hidden>
+    <div class="container page-head">
+      <div>
+        <h1 id="about-h">About the models</h1>
+        <p>DSA 8401 Applied Machine Learning capstone: land-use / land-cover classification of Sentinel-2 imagery.</p>
+      </div>
+    </div>
+    <div class="container about">
+      <div class="kpis" id="about-kpis"></div>
+
+      <div class="two-col">
+        <div class="card pad prose">
+          <h2>How a map is made</h2>
+          <p>The models classify one <b>64 × 64 pixel patch</b>: 640 m × 640 m at Sentinel-2's 10 m resolution.
+            To map a larger image, that window slides across it with overlap. Every pixel gets the average of the
+            predictions of all windows covering it (weighted towards window centres), and takes the winning class.</p>
+          <p>Images are rescaled first so a window always covers 640 m on the ground, because that is the scale
+            the models learned.</p>
+          <h2>What answers your upload</h2>
+          <ul>
+            <li><b>13-band GeoTIFF:</b> a custom CNN on all 13 bands, averaged with EfficientNet-B0 on the
+              true-colour bands, each over the 8 flips/rotations of the patch.</li>
+            <li><b>PNG / JPEG:</b> EfficientNet-B0 (ImageNet-pretrained, fine-tuned), over the 8 flips/rotations.</li>
+          </ul>
+          <p>Both were trained on 19,286 EuroSAT patches and tested on 3,857 patches from places never seen in
+            training (a spatial split).</p>
+        </div>
+        <div class="card pad prose">
+          <h2>Good to know</h2>
+          <div class="callout">
+            <svg class="ic"><use href="#i-alert"/></svg>
+            <p><b>Patch-level, not pixel-exact.</b> Boundaries are about 100–300 m wide; small features
+              (a single building, a narrow stream) can be missed.</p>
+          </div>
+          <div class="callout">
+            <svg class="ic"><use href="#i-alert"/></svg>
+            <p><b>Made for Sentinel-2.</b> Drone photos or zoomed-in web maps look different from 10 m imagery;
+              set the ground resolution and treat results with caution.</p>
+          </div>
+          <div class="callout">
+            <svg class="ic"><use href="#i-alert"/></svg>
+            <p><b>European training data.</b> EuroSAT covers 34 European countries; other landscapes
+              (tropical farms, informal settlements) may be confused.</p>
+          </div>
+          <h2>Data</h2>
+          <p>EuroSAT (Helber et al., 2019), 27,000 labelled Sentinel-2 patches.
+            <a href="/docs">API documentation</a> for developers.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  <div class="container footer-inner">
+    <span class="brand small"><span class="brand-mark"><svg class="ic"><use href="#i-logo"/></svg></span>EuroSAT Land Cover</span>
+    <span>DSA 8401 capstone · EuroSAT (Helber et al., 2019) · <a href="/docs">API</a></span>
+  </div>
+</footer>
+
+<div class="toasts" id="toasts" aria-live="assertive"></div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>

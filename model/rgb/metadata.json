@@ -1,0 +1,43 @@
+{
+  "model_name": "eurosat_lulc_classifier_rgb",
+  "version": 2,
+  "run": "effnet_rgb_ce_fulltrain",
+  "run_id": "c2d7dee8853c4e469add68f4857cba32",
+  "architecture": "effnet",
+  "loss": "ce",
+  "input": {
+    "bands": "rgb",
+    "shape": [
+      64,
+      64,
+      3
+    ],
+    "description": "8-bit true colour (B04, B03, B02), reflectance / 3000 * 255 clipped",
+    "band_order": [
+      "B04",
+      "B03",
+      "B02"
+    ]
+  },
+  "classes": [
+    "AnnualCrop",
+    "Forest",
+    "HerbaceousVegetation",
+    "Pasture",
+    "PermanentCrop",
+    "SeaLake",
+    "Residential",
+    "River",
+    "Industrial",
+    "Highway"
+  ],
+  "metrics": {
+    "val_macro_f1": 0.944,
+    "test_macro_f1": 0.9402,
+    "test_minority_macro_f1": 0.9453,
+    "test_accuracy": 0.9424,
+    "test_top3_accuracy": 0.9961
+  },
+  "train_set": "full",
+  "note": "Deployment model: same architecture as the research champion but trained on the full (roughly balanced) training pool. The imbalanced training set was the experimental condition, not a deployment constraint. Research champion kept in artifacts/deployed_v1/."
+}

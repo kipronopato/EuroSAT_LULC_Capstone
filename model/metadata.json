@@ -1,0 +1,53 @@
+{
+  "model_name": "eurosat_lulc_classifier",
+  "version": 2,
+  "run": "cnn_ms_ce_fulltrain",
+  "run_id": "026a4d344ea44b3397ca9af053fbae7f",
+  "architecture": "cnn",
+  "loss": "ce",
+  "input": {
+    "bands": "ms",
+    "shape": [
+      64,
+      64,
+      13
+    ],
+    "description": "raw Sentinel-2 L1C reflectance, 13 bands",
+    "band_order": [
+      "B01",
+      "B02",
+      "B03",
+      "B04",
+      "B05",
+      "B06",
+      "B07",
+      "B08",
+      "B08A",
+      "B09",
+      "B10",
+      "B11",
+      "B12"
+    ]
+  },
+  "classes": [
+    "AnnualCrop",
+    "Forest",
+    "HerbaceousVegetation",
+    "Pasture",
+    "PermanentCrop",
+    "SeaLake",
+    "Residential",
+    "River",
+    "Industrial",
+    "Highway"
+  ],
+  "metrics": {
+    "val_macro_f1": 0.9721,
+    "test_macro_f1": 0.9704,
+    "test_minority_macro_f1": 0.9635,
+    "test_accuracy": 0.9715,
+    "test_top3_accuracy": 0.9984
+  },
+  "train_set": "full",
+  "note": "Deployment model: same architecture as the research champion but trained on the full (roughly balanced) training pool. The imbalanced training set was the experimental condition, not a deployment constraint. Research champion kept in artifacts/deployed_v1/."
+}
