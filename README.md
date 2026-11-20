@@ -6,7 +6,7 @@ This project classifies Sentinel-2 satellite images into 10 land-use and land-co
 
 **Main result:** Class weighting helped the 13-band CNN correctly identify **74%** of highway images on the geographic test split, up from **35%**.
 
-[Final presentation](deliverables/EuroSAT_Capstone_5_Minute_Presentation.pptx) · [Analysis notebook](notebooks/capstone_report.ipynb) · [AI use disclosure](AI_USE.md)
+[Final presentation](deliverables/EuroSAT_Capstone_5_Minute_Presentation_Full_Legend.pptx) · [Analysis notebook](notebooks/capstone_report.ipynb) · [AI use disclosure](AI_USE.md)
 
 ## Run the demo
 
