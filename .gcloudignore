@@ -6,6 +6,7 @@
 !/api/
 !/api/*.py
 !/pipeline/
+/pipeline/*
 !/pipeline/__init__.py
 !/pipeline/config.py
 !/pipeline/data.py
@@ -24,3 +25,5 @@
 !/samples/*.png
 !/samples/NOTICE.md
 !/samples/EUROSAT_LICENSE.txt
+__pycache__/
+*.pyc
