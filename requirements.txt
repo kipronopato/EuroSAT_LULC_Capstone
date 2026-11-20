@@ -1,9 +1,8 @@
-# Everything: training pipeline (MLflow) + API + UI + tests.
+# Training pipeline (MLflow), web app, API, and tests.
 -r requirements-api.txt
 scikit-learn
 matplotlib
 mlflow
-streamlit
 requests
 pytest
 httpx

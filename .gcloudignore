@@ -1,0 +1,26 @@
+# Upload only the files used by the Docker image.
+*
+!/Dockerfile
+!/.dockerignore
+!/requirements-api.txt
+!/api/
+!/api/*.py
+!/pipeline/
+!/pipeline/__init__.py
+!/pipeline/config.py
+!/pipeline/data.py
+!/web/
+!/web/*.html
+!/web/*.css
+!/web/*.js
+!/model/
+!/model/*.json
+!/model/*.keras
+!/model/rgb/
+!/model/rgb/*.json
+!/model/rgb/*.keras
+!/samples/
+!/samples/*.tif
+!/samples/*.png
+!/samples/NOTICE.md
+!/samples/EUROSAT_LICENSE.txt

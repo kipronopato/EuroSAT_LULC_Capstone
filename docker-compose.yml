@@ -1,4 +1,4 @@
-# docker compose up --build   ->  API on http://localhost:8000/docs, UI on http://localhost:8501
+# docker compose up --build serves the web app and API at http://localhost:8000
 services:
   api:
     build: .
@@ -8,14 +8,3 @@ services:
       interval: 10s
       retries: 6
       start_period: 30s
-
-  ui:
-    build:
-      context: .
-      dockerfile: ui/Dockerfile
-    ports: ["8501:8501"]
-    environment:
-      API_URL: http://api:8000
-    depends_on:
-      api:
-        condition: service_healthy

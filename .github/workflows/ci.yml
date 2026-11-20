@@ -1,4 +1,4 @@
-# Test the packaged models through the API and smoke test the Docker Compose services.
+# Test the packaged models and the container that serves the web app and API.
 name: eurosat-capstone
 
 on:
@@ -26,18 +26,19 @@ jobs:
       - name: Test the API with the packaged models
         run: pytest -q
 
-      - name: Build the Docker images
+      - name: Build the Docker image
         run: docker compose build
 
-      - name: Smoke test the containers
+      - name: Smoke test the web app and API
         run: |
           docker compose up -d --wait --wait-timeout 180
+          curl --fail --silent --show-error http://localhost:8000/ | grep 'data-page="map"'
+          curl --fail --silent --show-error -o /dev/null http://localhost:8000/static/app.js
           curl --fail http://localhost:8000/health
           curl --fail http://localhost:8000/model-info
           curl --fail-with-body -F "file=@samples/River.tif" http://localhost:8000/predict
           curl --fail-with-body -F "file=@samples/Industrial.png" http://localhost:8000/predict
           curl --fail --max-time 120 -o /dev/null http://localhost:8000/map/demo
-          curl --fail --retry 15 --retry-connrefused --retry-delay 2 -o /dev/null http://localhost:8501
 
       - name: Show container logs on failure
         if: failure()

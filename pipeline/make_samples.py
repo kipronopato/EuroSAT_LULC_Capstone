@@ -1,5 +1,5 @@
 """Copy one TEST-split patch per class into samples/ (as the original 13-band GeoTIFF and as an
-8-bit RGB PNG), for the API tests, the Streamlit demo and the /docs page.
+8-bit RGB PNG), for the API tests, the web app demo and the /docs page.
 
 Run:  python -m pipeline.make_samples
 """

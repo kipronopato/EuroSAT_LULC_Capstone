@@ -18,7 +18,7 @@ cd EuroSAT_LULC_Capstone
 docker compose up --build -d --wait --wait-timeout 180
 ```
 
-Open the [web app](http://localhost:8000/). Try a sample in the **Classify a patch** tab or load the demo scene in the **Land-cover map** tab. You can also open the [API docs](http://localhost:8000/docs) or the [Streamlit interface](http://localhost:8501/).
+Open the [web app](http://localhost:8000/). Try a sample in the **Classify a patch** tab or load the demo scene in the **Land-cover map** tab. Interactive [API docs](http://localhost:8000/docs) are also available.
 
 The repository includes trained models and sample images. The demo runs without downloading EuroSAT or retraining.
 
@@ -40,7 +40,7 @@ Use `curl.exe` in Windows PowerShell. The last command stops both services.
 
 | Area | Tools |
 | --- | --- |
-| Web interfaces | HTML, CSS, JavaScript, Streamlit |
+| Web interface | HTML, CSS, JavaScript |
 | API | FastAPI, Uvicorn |
 | Data and models | Rasterio, NumPy, pandas, scikit-learn, Keras, TensorFlow |
 | Experiment tracking | MLflow |
@@ -69,7 +69,7 @@ flowchart LR
   B --> E["Full training set"]
   E --> F["Serving models"]
   F --> G["FastAPI predictions and maps"]
-  G <--> H["Web app and Streamlit"]
+  G <--> H["Browser interface"]
 ```
 
 1. Read the GeoTIFF pixels and patch coordinates.
@@ -128,6 +128,16 @@ The [serving configuration](model/serving.json) records the model combinations a
 
 Patch uploads have a 10 MB limit. Map uploads have a 60 MB limit.
 
+## Deploy to Google Cloud Run
+
+FastAPI serves the browser interface and the model endpoints from the same Docker container. With the Google Cloud CLI signed in to a billing-enabled project, deploy from the repository root:
+
+```bash
+gcloud run deploy eurosat-capstone --source . --project YOUR_PROJECT_ID --region africa-south1 --allow-unauthenticated --cpu 2 --memory 2Gi --concurrency 1 --min-instances 0 --max-instances 1 --timeout 180s
+```
+
+Open the service URL printed by Cloud Run to use the web app. The first request may take longer after the service scales to zero. For the public demo, keep uploads below 32 MiB to fit Cloud Run's HTTP/1 request limit. See the [Cloud Run source deployment guide](https://docs.cloud.google.com/run/docs/deploying-source-code) for project permissions and the [pricing page](https://cloud.google.com/run/pricing) for billing details.
+
 ## Reproduce the experiments
 
 Use Python 3.12 in a virtual environment. The first run downloads about 2 GB of EuroSAT data. Allow several additional GB for processed images and model files, and several hours for training on CPU.
@@ -160,12 +170,12 @@ mlflow ui --backend-store-uri sqlite:///mlflow.db --port 5000
 
 ## Tests and project files
 
-Run `python -m pytest -q` after installing the project dependencies. [GitHub Actions](https://github.com/kipronopato/EuroSAT_LULC_Capstone/actions) also builds the Docker images and smoke-tests the API and Streamlit.
+Run `python -m pytest -q` after installing the project dependencies. [GitHub Actions](https://github.com/kipronopato/EuroSAT_LULC_Capstone/actions) also builds the Docker image and smoke-tests the web app and API.
 
 | Location | Contents |
 | --- | --- |
 | [`pipeline/`](pipeline/) | Data preparation, training, and evaluation |
-| [`api/`](api/), [`web/`](web/), [`ui/`](ui/) | FastAPI service, web app, and Streamlit |
+| [`api/`](api/), [`web/`](web/) | FastAPI service and web app |
 | [`model/`](model/), [`research_model/`](research_model/) | Serving weights and the submitted research champion |
 | [`samples/`](samples/), [`reports/`](reports/) | Demo imagery and evaluation outputs |
 | [`notebooks/`](notebooks/), [`deliverables/`](deliverables/) | Analysis notebook and final presentation |
