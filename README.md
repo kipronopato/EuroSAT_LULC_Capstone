@@ -6,6 +6,8 @@ This project classifies Sentinel-2 satellite images into 10 land-use and land-co
 
 **Main result:** Class weighting helped the 13-band CNN correctly identify **74%** of highway images on the geographic test split, up from **35%**.
 
+[Open the live EuroSAT app](https://eurosat-capstone.redsea-4270c728.southafricanorth.azurecontainerapps.io) on Azure Container Apps. The first request after a period of inactivity may take longer while the app starts.
+
 [Final presentation](deliverables/EuroSAT_Capstone_5_Minute_Presentation_Full_Legend.pptx) · [Analysis notebook](notebooks/capstone_report.ipynb) · [AI use disclosure](AI_USE.md)
 
 ## Run the demo
