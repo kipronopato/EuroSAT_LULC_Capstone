@@ -14,6 +14,7 @@
 !/web/*.html
 !/web/*.css
 !/web/*.js
+!/web/demo-landcover.png
 !/model/
 !/model/*.json
 !/model/*.keras

@@ -139,9 +139,7 @@ function makeCompare(root) {
   };
 }
 
-const hero = makeCompare($("hero-compare"));
-hero.mode("swipe");
-hero.aspect(512, 384);
+makeCompare($("hero-compare"));
 
 // ================================================================ server status, model info, demo map
 let demoPromise = null;
@@ -167,13 +165,6 @@ api("/model-info").then((info) => {
   );
   renderClassGrid();
 }).catch(() => renderClassGrid());
-
-getDemo().then((r) => {
-  $("hero-map").src = r.map;
-  $("hero-map").hidden = false;
-  hero.aspect(r.width, r.height);
-  $("hero-loading").hidden = true;
-}).catch(() => { $("hero-loading").textContent = "Demo map unavailable"; });
 
 function kpi(label, value, sub, colour, big) {
   return el("div", { class: "card kpi" + (big ? " big" : "") },

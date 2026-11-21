@@ -8,7 +8,7 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2310b981' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'><polygon points='12 2 2 7 12 12 22 7 12 2'/><polyline points='2 17 12 22 22 17'/><polyline points='2 12 12 17 22 12'/></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/static/style.css">
 <script>
   // Apply the saved theme before first paint (no flash)
@@ -78,76 +78,45 @@
     <div class="hero">
       <div class="container hero-inner">
         <div class="hero-copy">
-          <span class="eyebrow"><svg class="ic"><use href="#i-sat"/></svg>Sentinel-2 · 10 land-cover classes</span>
-          <h1>See what covers the land, <span class="grad">from space</span>.</h1>
-          <p class="lead">Upload a satellite image and get a colour-coded land-cover map in seconds: crops, forest,
-            water, towns, roads and more, with the area of each.</p>
+          <p class="eyebrow"><svg class="ic"><use href="#i-sat"/></svg>Sentinel-2 imagery</p>
+          <h1>Read the landscape<span>.</span></h1>
+          <p class="lead">Turn satellite imagery into a land-cover map. See where crops, forests and towns are, and estimate how much ground each class covers.</p>
           <div class="cta">
-            <a class="btn btn-primary btn-lg" href="#/map"><svg class="ic"><use href="#i-map"/></svg>Map an image</a>
-            <a class="btn btn-ghost btn-lg" href="#/classify"><svg class="ic"><use href="#i-scan"/></svg>Classify a patch</a>
+            <a class="btn btn-primary btn-lg" href="#/map">Map an image <svg class="ic"><use href="#i-arrow"/></svg></a>
+            <a class="hero-demo" href="#/map?demo"><svg class="ic"><use href="#i-play"/></svg>Open the sample map</a>
           </div>
           <ul class="hero-stats" id="hero-stats">
-            <li><b data-stat="f1ms">98.6%</b><span>test macro F1</span></li>
             <li><b>10</b><span>land-cover classes</span></li>
             <li><b>13</b><span>spectral bands</span></li>
+            <li><b data-stat="f1ms">98.6%</b><span>13-band test macro F1</span></li>
           </ul>
         </div>
         <figure class="hero-visual">
-          <div class="compare" id="hero-compare" data-pos="50">
+          <div class="preview-heading"><strong>EuroSAT sample map</strong><span>48-patch mosaic</span></div>
+          <div class="compare swipe" id="hero-compare" data-pos="54">
             <div class="stage" id="hero-stage">
-              <img class="base" src="/samples/mosaic_demo.png" alt="Demo satellite scene">
-              <img class="over" id="hero-map" alt="Land-cover map of the demo scene" hidden>
-              <div class="handle" role="slider" tabindex="0" aria-label="Compare image and map" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50"><span></span></div>
-              <span class="tag tag-l">Map</span><span class="tag tag-r">Satellite</span>
-              <div class="stage-loading" id="hero-loading"><span class="spinner"></span>Generating demo map…</div>
+              <img class="base" src="/samples/mosaic_demo.png" width="512" height="384" alt="True-colour mosaic of EuroSAT satellite patches">
+              <img class="over" src="/static/demo-landcover.png" width="512" height="384" alt="Predicted land-cover classes for the mosaic">
+              <div class="handle" role="slider" tabindex="0" aria-label="Compare classified map with satellite imagery" aria-valuemin="0" aria-valuemax="100" aria-valuenow="54"><span></span></div>
+              <span class="tag tag-l">Land cover</span><span class="tag tag-r">True colour</span>
             </div>
           </div>
-          <figcaption>Demo scene, 3.8 × 5.1 km. Drag the handle to compare.</figcaption>
+          <figcaption><span>Drag to compare layers</span><span>5.12 × 3.84 km at 10 m/px</span></figcaption>
         </figure>
       </div>
     </div>
 
-    <div class="container section">
-      <div class="section-head">
-        <h2>How it works</h2>
-        <p>Three steps, no account, nothing to install.</p>
+    <section class="container workflow" aria-labelledby="workflow-title">
+      <h2 id="workflow-title">Two ways to explore</h2>
+      <div class="workflow-links">
+        <a href="#/map"><svg class="ic"><use href="#i-map"/></svg>
+          <div><h3>Map a scene</h3><p>Explore coverage, isolate a class, and download the classified map.</p></div>
+          <svg class="ic go"><use href="#i-arrow"/></svg></a>
+        <a href="#/classify"><svg class="ic"><use href="#i-scan"/></svg>
+          <div><h3>Classify a patch</h3><p>See the predicted class and confidence scores for a 64 × 64 patch.</p></div>
+          <svg class="ic go"><use href="#i-arrow"/></svg></a>
       </div>
-      <ol class="steps">
-        <li class="card step">
-          <span class="step-n">1</span>
-          <h3>Upload</h3>
-          <p>A Sentinel-2 GeoTIFF (all 13 bands, most accurate) or any RGB satellite image (PNG/JPEG).</p>
-        </li>
-        <li class="card step">
-          <span class="step-n">2</span>
-          <h3>Analyse</h3>
-          <p>A 640 m window slides across the image; deep-learning models classify every position.</p>
-        </li>
-        <li class="card step">
-          <span class="step-n">3</span>
-          <h3>Explore</h3>
-          <p>Compare map and image, isolate a class, see where the model is unsure, and download the map.</p>
-        </li>
-      </ol>
-
-      <div class="features">
-        <a class="card feature" href="#/map">
-          <span class="feature-ic"><svg class="ic"><use href="#i-map"/></svg></span>
-          <div><h3>Land-cover map</h3><p>Turn a whole scene into a colour-coded map with area per class.</p></div>
-          <svg class="ic go"><use href="#i-arrow"/></svg>
-        </a>
-        <a class="card feature" href="#/classify">
-          <span class="feature-ic"><svg class="ic"><use href="#i-scan"/></svg></span>
-          <div><h3>Patch classifier</h3><p>One 64 × 64 patch in, its class and confidence out.</p></div>
-          <svg class="ic go"><use href="#i-arrow"/></svg>
-        </a>
-        <a class="card feature" href="#/classes">
-          <span class="feature-ic"><svg class="ic"><use href="#i-grid"/></svg></span>
-          <div><h3>Class guide</h3><p>What each of the ten classes looks like from orbit.</p></div>
-          <svg class="ic go"><use href="#i-arrow"/></svg>
-        </a>
-      </div>
-    </div>
+    </section>
   </section>
 
   <!-- ============================================================ MAP -->
@@ -371,7 +340,8 @@
 <footer class="footer">
   <div class="container footer-inner">
     <span class="brand small"><span class="brand-mark"><svg class="ic"><use href="#i-logo"/></svg></span>EuroSAT Land Cover</span>
-    <span>DSA 8401 capstone · EuroSAT (Helber et al., 2019) · <a href="/docs">API</a></span>
+    <span>DSA 8401 capstone · EuroSAT (Helber et al., 2019)</span>
+    <nav aria-label="Project links"><a href="/docs">API</a><a href="https://github.com/kipronopato/EuroSAT_LULC_Capstone">GitHub</a></nav>
   </div>
 </footer>
 
