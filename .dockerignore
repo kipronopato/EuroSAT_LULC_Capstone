@@ -9,6 +9,7 @@ tests/
 .github/
 .git/
 .capstone-deck-build/
+.chart-data-*/
 .pytest_cache/
 .venv/
 .env

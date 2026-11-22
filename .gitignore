@@ -8,12 +8,13 @@ __pycache__/
 .ipynb_checkpoints/
 .pytest_cache/
 .capstone-deck-build/
+.chart-data-*/
 .venv/
 .env
 .env.*
 !.env.example
 ~$*.pptx
-.pytest_cache/
+~$*.docx
 .capstone-deck-build/
 .venv/
 .env

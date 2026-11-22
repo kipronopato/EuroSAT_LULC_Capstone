@@ -8,7 +8,18 @@ This project classifies Sentinel-2 satellite images into 10 land-use and land-co
 
 [Open the live EuroSAT app](https://eurosat-capstone.redsea-4270c728.southafricanorth.azurecontainerapps.io) on Azure Container Apps. The first request after a period of inactivity may take longer while the app starts.
 
-[Final presentation](deliverables/EuroSAT_Capstone_5_Minute_Presentation_Full_Legend.pptx) · [Analysis notebook](notebooks/capstone_report.ipynb) · [AI use disclosure](AI_USE.md)
+[Final presentation](deliverables/EuroSAT_Capstone_Presentation.pptx) · [Technical guide](deliverables/EuroSAT_Model_Technical_Guide.docx) · [Analysis notebook](notebooks/capstone_report.ipynb) · [AI use disclosure](AI_USE.md)
+
+## Project layout
+
+| Location | What you will find |
+| --- | --- |
+| [`deliverables/`](deliverables/) | Final five-minute presentation and model technical guide |
+| [`pipeline/`](pipeline/) and [`run_pipeline.py`](run_pipeline.py) | Data preparation, training, evaluation, and research model export |
+| [`reports/`](reports/) and [`notebooks/`](notebooks/) | Experiment results, split diagnostics, and analysis |
+| [`api/`](api/) and [`web/`](web/) | FastAPI inference service and browser interface |
+| [`model/`](model/) and [`research_model/`](research_model/) | Serving checkpoints and the research champion |
+| [`samples/`](samples/) and [`tests/`](tests/) | Demo inputs, imagery attribution, and API tests |
 
 ## Run the demo
 
@@ -30,7 +41,7 @@ curl --fail -F "file=@samples/Industrial.tif" http://localhost:8000/predict
 docker compose down
 ```
 
-Use `curl.exe` in Windows PowerShell. The last command stops both services.
+Use `curl.exe` in Windows PowerShell. The last command stops the app container.
 
 ## Key features
 
@@ -130,15 +141,17 @@ The [serving configuration](model/serving.json) records the model combinations a
 
 Patch uploads have a 10 MB limit. Map uploads have a 60 MB limit.
 
-## Deploy to Google Cloud Run
+## Deploy to Azure Container Apps
 
-FastAPI serves the browser interface and the model endpoints from the same Docker container. With the Google Cloud CLI signed in to a billing-enabled project, deploy from the repository root:
+The [Dockerfile](Dockerfile) packages the browser interface, API, trained serving models, and samples in one image. Run the [Publish EuroSAT container workflow](.github/workflows/publish-container.yml) on the commit you want to deploy. Copy the commit-tagged GitHub Container Registry image from the workflow summary.
+
+With the Azure CLI signed in to the subscription that contains your existing Container App, update the app to that image:
 
 ```bash
-gcloud run deploy eurosat-capstone --source . --project YOUR_PROJECT_ID --region africa-south1 --allow-unauthenticated --cpu 2 --memory 2Gi --concurrency 1 --min-instances 0 --max-instances 1 --timeout 180s
+az containerapp update --name eurosat-capstone --resource-group YOUR_RESOURCE_GROUP --image ghcr.io/kipronopato/eurosat_lulc_capstone:sha-COMMIT_SHA
 ```
 
-Open the service URL printed by Cloud Run to use the web app. The first request may take longer after the service scales to zero. For the public demo, keep uploads below 32 MiB to fit Cloud Run's HTTP/1 request limit. See the [Cloud Run source deployment guide](https://docs.cloud.google.com/run/docs/deploying-source-code) for project permissions and the [pricing page](https://cloud.google.com/run/pricing) for billing details.
+Keep the app's ingress target port at `8000` and check `/health` on the app URL after the revision starts. [Azure CLI reference](https://learn.microsoft.com/en-us/cli/azure/containerapp#az-containerapp-update)
 
 ## Reproduce the experiments
 
@@ -164,23 +177,17 @@ New training checkpoints go to `artifacts/models/`. The app and tests load the s
 mlflow ui --backend-store-uri sqlite:///mlflow.db --port 5000
 ```
 
+Training creates local working files under `data/`, `artifacts/` and `mlruns/`, along with `mlflow.db`. Git excludes these generated files.
+
 ## Limitations
 
 - Each training configuration ran once. Small differences between scores need replication.
 - EuroSAT covers European Sentinel-2 scenes. Accuracy in other regions or with other imagery needs separate validation.
 - Land-cover maps use overlapping windows of roughly 640 m. Boundaries are approximate.
 
-## Tests and project files
+## Tests
 
 Run `python -m pytest -q` after installing the project dependencies. [GitHub Actions](https://github.com/kipronopato/EuroSAT_LULC_Capstone/actions) also builds the Docker image and smoke-tests the web app and API.
-
-| Location | Contents |
-| --- | --- |
-| [`pipeline/`](pipeline/) | Data preparation, training, and evaluation |
-| [`api/`](api/), [`web/`](web/) | FastAPI service and web app |
-| [`model/`](model/), [`research_model/`](research_model/) | Serving weights and the submitted research champion |
-| [`samples/`](samples/), [`reports/`](reports/) | Demo imagery and evaluation outputs |
-| [`notebooks/`](notebooks/), [`deliverables/`](deliverables/) | Analysis notebook and final presentation |
 
 ## Data credits
 
