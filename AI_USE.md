@@ -3,10 +3,8 @@
 **Project:** EuroSAT land-use and land-cover classification, DSA 8401 Applied Machine Learning  
 **Student:** Patrick Kiprono
 
-OpenAI ChatGPT (Codex) was used to review the capstone brief and project files, draft and format the final PowerPoint and its speaker notes, and prepare the repository for submission. Submission preparation included README and architecture documentation, review of the packaged artifacts, updates to the Git and Docker configuration and CI workflow, separation of the research model export from the packaged serving models, and a smaller inference batch for the demo map.
+I used OpenAI ChatGPT (Codex) to enhance how I presented and packaged my EuroSAT capstone. The slides, speaker notes, and README were AI-enhanced. I used Codex to draft and refine the wording, explain the model results, and organize the submission files.
 
-The slide metrics came from the project's existing leaderboard, reports, and serving metadata. The existing model artifacts and evaluation results were the basis for the presentation. AI assistance with the submission did not generate those benchmark results or train the submitted models.
+I also used Codex for implementation and deployment support. It helped update the FastAPI demo and model packaging, troubleshoot GeoTIFF support in Docker and GitHub Actions, and document the Azure deployment.
 
-Codex also diagnosed the GeoTIFF failure during GitHub Actions testing, added the Rasterio system dependency to the Docker images, and updated the container smoke test.
-
-Codex removed the Streamlit demo from the active deployment, helped package the FastAPI web app for cloud hosting, and documented the Azure Container Apps deployment. Codex also helped organize the final submission files.
+The presentation draws on the capstone’s trained models and recorded experiments. I used the scores from the project’s leaderboard, evaluation reports, and serving metadata. The AI assistance described here focused on how I explained, packaged, and deployed that work.
