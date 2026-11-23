@@ -8,13 +8,13 @@ This project classifies Sentinel-2 satellite images into 10 land-use and land-co
 
 [Open the live EuroSAT app](https://eurosat-capstone.redsea-4270c728.southafricanorth.azurecontainerapps.io) on Azure Container Apps. The first request after a period of inactivity may take longer while the app starts.
 
-[Final presentation](deliverables/EuroSAT_Capstone_Presentation.pptx) · [Technical guide](deliverables/EuroSAT_Model_Technical_Guide.docx) · [Analysis notebook](notebooks/capstone_report.ipynb) · [AI use disclosure](AI_USE.md)
+[Final presentation](deliverables/EuroSAT_Capstone_Presentation.pptx) · [Analysis notebook](notebooks/capstone_report.ipynb) · [AI use disclosure](AI_USE.md)
 
 ## Project layout
 
 | Location | What you will find |
 | --- | --- |
-| [`deliverables/`](deliverables/) | Final five-minute presentation and model technical guide |
+| [`deliverables/`](deliverables/) | Final five-minute presentation |
 | [`pipeline/`](pipeline/) and [`run_pipeline.py`](run_pipeline.py) | Data preparation, training, evaluation, and research model export |
 | [`reports/`](reports/) and [`notebooks/`](notebooks/) | Experiment results, split diagnostics, and analysis |
 | [`api/`](api/) and [`web/`](web/) | FastAPI inference service and browser interface |

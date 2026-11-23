@@ -9,4 +9,4 @@ The slide metrics came from the project's existing leaderboard, reports, and ser
 
 Codex also diagnosed the GeoTIFF failure during GitHub Actions testing, added the Rasterio system dependency to the Docker images, and updated the container smoke test.
 
-Codex removed the Streamlit demo from the active deployment, helped package the FastAPI web app for cloud hosting, and documented the Azure Container Apps deployment. Codex also drafted the model technical guide from the implementation and recorded experiments and helped organize the final submission files.
+Codex removed the Streamlit demo from the active deployment, helped package the FastAPI web app for cloud hosting, and documented the Azure Container Apps deployment. Codex also helped organize the final submission files.
